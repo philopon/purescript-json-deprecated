@@ -19,7 +19,9 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-maps": "*",
+    "purescript-maps":   "*",
+    "purescript-maybe":  "*",
+    "purescript-tuples": "*",
     "purescript-either": "*"
   }
 }
