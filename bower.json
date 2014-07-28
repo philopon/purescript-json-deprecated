@@ -1,0 +1,25 @@
+{
+  "name": "purescript-json",
+  "version": "0.1.0",
+  "homepage": "https://github.com/philopon/purescript-json",
+  "description": "JSON Type",
+  "keywords": [
+    "purescript"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "bower_components",
+    "node_modules",
+    "output",
+    "tests",
+    "tmp",
+    "bower.json",
+    "Gruntfile.js",
+    "package.json"
+  ],
+  "dependencies": {
+    "purescript-maps": "*",
+    "purescript-either": "*"
+  }
+}
