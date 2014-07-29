@@ -1,5 +1,6 @@
 module Data.JSON 
     ( Value(..), Object(..), Array(..), Parser(..)
+    , FromJSON, parseJSON, fail
     , decode, eitherDecode
     , (.:), (.:?), (.!=)
     ) where
@@ -31,6 +32,16 @@ instance showValue :: Show Value where
     show (Bool   b) = "Bool "   ++ show b
     show Null       = "Null"
 
+instance eqValue :: Eq Value where
+    (==) (Object a) (Object b) = a == b
+    (==) (Array  a) (Array  b) = a == b
+    (==) (String a) (String b) = a == b
+    (==) (Number a) (Number b) = a == b
+    (==) (Bool   a) (Bool   b) = a == b
+    (==) Null       Null       = true
+    (==) _          _          = false
+    (/=) a          b          = not (a == b)
+
 class FromJSON a where
     parseJSON :: Value -> Parser a
 
@@ -44,6 +55,9 @@ decode s = case eitherDecode s of
     Right a -> Just a
     Left  _ -> Nothing
 
+fail :: forall a. String -> Parser a
+fail = Left
+
 sequence :: forall m a. (Monad m) => [m a] -> m [a]
 sequence [] = return []
 sequence (a:as) = do
@@ -56,38 +70,37 @@ instance valueFromJSON :: FromJSON Value where
 
 instance boolFromJSON :: FromJSON Boolean where
     parseJSON (Bool b) = Right b
-    parseJSON i        = Left $ show i ++ " is not Boolean."
+    parseJSON i        = fail $ show i ++ " is not Boolean."
 
 instance numberFromJSON :: FromJSON Number where
-    parseJSON (Number n) = Right n
-    parseJSON i          = Left $ show i ++ " is not Number."
+    parseJSON (Number n) = return n
+    parseJSON i          = fail $ show i ++ " is not Number."
 
 instance unitFromJSON :: FromJSON Unit where
-    parseJSON Null = Right unit
-    parseJSON i    = Left $ show i ++ " is not Null."
+    parseJSON Null = return unit
+    parseJSON i    = fail $ show i ++ " is not Null."
 
 instance stringFromJSON :: FromJSON String where
-    parseJSON (String s) = Right s
-    parseJSON i          = Left $ show i ++ " is not String."
+    parseJSON (String s) = return s
+    parseJSON i          = fail $ show i ++ " is not String."
 
 instance arrayFromJSON :: (FromJSON a) => FromJSON [a] where
     parseJSON (Array a) = sequence $ parseJSON <$> a
-    parseJSON i          = Left $ show i ++ " is not [a]."
+    parseJSON i         = fail $ show i ++ " is not [a]."
 
 instance tupleFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Tuple a b) where
     parseJSON (Array [a,b]) = Tuple <$> parseJSON a <*> parseJSON b
-    parseJSON i             = Left $ show i ++ " is not (a,b)."
+    parseJSON i             = fail $ show i ++ " is not (a,b)."
 
 instance eitherFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Either a b) where
-    parseJSON (Object obj) = case obj .: "Right" of
-        Right r -> Right (Right r)
-        Left  _ -> case obj .: "Left" of
-            Right l -> Right (Left l)
-            Left  _ -> Left $ show obj ++ " is not (Either a b)."
-    parseJSON i = Left $ show i ++ " is not (Either a b)."
+    parseJSON (Object obj) = case M.toList obj of
+        [Tuple "Right" r] -> Right <$> parseJSON r
+        [Tuple "Left"  l] -> Left  <$> parseJSON l
+        _                 -> fail $ show obj ++ " is not (Either a b)."
+    parseJSON i = fail $ show i ++ " is not (Either a b)."
 
 instance maybeFromJSON :: (FromJSON a) => FromJSON (Maybe a) where
-    parseJSON a = Right $ case parseJSON a of
+    parseJSON a = return $ case parseJSON a of
         Left  _ -> Nothing
         Right r -> Just r
 
@@ -98,8 +111,8 @@ instance mapFromJSON :: (Ord a, FromJSON a) => FromJSON (M.Map String a) where
     parseJSON (Object o) = M.fromList <$> (sequence $ fn <$> M.toList o)
       where
         fn (Tuple k v) = case parseJSON v of
-            Right r -> Right (Tuple k r)
-            Left  l -> Left l
+            Right r -> return (Tuple k r)
+            Left  l -> fail l
 
 (.:) :: forall a. (FromJSON a) => Object -> String -> Parser a
 (.:) obj key = case M.lookup key obj of
@@ -153,7 +166,7 @@ foreign import jsonToValueImpl
     \        return right(Array(ary));\
     \\
     \    } else if (typ === 'Object') {\
-    \        var insert = Data_Function.mkFn3(Data_Map.insert(Prelude.ordString));\
+    \        var insert = Data_Function.mkFn3(Data_Map.insert(Prelude.ordString()));\
     \        var obj = Data_Map.empty;\
     \        for(var k in json) { \
     \            Data_Either.either \

@@ -21,6 +21,9 @@
 
 ### Type Classes
 
+    class FromJSON a where
+      parseJSON :: Value -> Parser a
+
 
 ### Type Class Instances
 
@@ -29,6 +32,8 @@
     instance boolFromJSON :: FromJSON Prim.Boolean
 
     instance eitherFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Either a b)
+
+    instance eqValue :: Eq Value
 
     instance mapFromJSON :: (Ord a, FromJSON a) => FromJSON (M.Map Prim.String a)
 
@@ -60,3 +65,5 @@
     decode :: forall a. (FromJSON a) => String -> Maybe a
 
     eitherDecode :: forall a. (FromJSON a) => String -> Either String a
+
+    fail :: forall a. String -> Parser a
