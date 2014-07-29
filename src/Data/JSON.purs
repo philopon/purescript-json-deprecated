@@ -93,11 +93,10 @@ instance tupleFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Tuple a b) where
     parseJSON i             = fail $ show i ++ " is not (a,b)."
 
 instance eitherFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Either a b) where
-    parseJSON (Object obj) = case obj .: "Right" of
-        Right r -> return (Right r)
-        Left  _ -> case obj .: "Left" of
-            Right l -> return (Left l)
-            Left  _ -> fail $ show obj ++ " is not (Either a b)."
+    parseJSON (Object obj) = case M.toList obj of
+        [Tuple "Right" r] -> Right <$> parseJSON r
+        [Tuple "Left"  l] -> Left  <$> parseJSON l
+        _                 -> fail $ show obj ++ " is not (Either a b)."
     parseJSON i = fail $ show i ++ " is not (Either a b)."
 
 instance maybeFromJSON :: (FromJSON a) => FromJSON (Maybe a) where
