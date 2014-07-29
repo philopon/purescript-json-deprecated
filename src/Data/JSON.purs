@@ -31,6 +31,16 @@ instance showValue :: Show Value where
     show (Bool   b) = "Bool "   ++ show b
     show Null       = "Null"
 
+instance eqValue :: Eq Value where
+    (==) (Object a) (Object b) = a == b
+    (==) (Array  a) (Array  b) = a == b
+    (==) (String a) (String b) = a == b
+    (==) (Number a) (Number b) = a == b
+    (==) (Bool   a) (Bool   b) = a == b
+    (==) Null       Null       = true
+    (==) _          _          = false
+    (/=) a          b          = not (a == b)
+
 class FromJSON a where
     parseJSON :: Value -> Parser a
 
@@ -153,7 +163,7 @@ foreign import jsonToValueImpl
     \        return right(Array(ary));\
     \\
     \    } else if (typ === 'Object') {\
-    \        var insert = Data_Function.mkFn3(Data_Map.insert(Prelude.ordString));\
+    \        var insert = Data_Function.mkFn3(Data_Map.insert(Prelude.ordString()));\
     \        var obj = Data_Map.empty;\
     \        for(var k in json) { \
     \            Data_Either.either \
