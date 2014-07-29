@@ -3,6 +3,9 @@ module Data.JSON
     , FromJSON, parseJSON, fail
     , decode, eitherDecode
     , (.:), (.:?), (.!=)
+
+    , ToJSON, toJSON, encode
+    , Pair(..), (.=), object
     ) where
 
 import qualified Data.Map as M
@@ -41,6 +44,8 @@ instance eqValue :: Eq Value where
     (==) Null       Null       = true
     (==) _          _          = false
     (/=) a          b          = not (a == b)
+
+--------------------------------------------------------------------------------
 
 class FromJSON a where
     parseJSON :: Value -> Parser a
@@ -179,7 +184,87 @@ foreign import jsonToValueImpl
     \    } else { \
     \        return left('unknown type: ' + typ);\
     \    }\
-    \}" :: forall a. JSON -> Either String Value
+    \}" :: JSON -> Either String Value
 
 jsonToValue :: String -> Either String Value
 jsonToValue = runFn3 jsonParseImpl Left jsonToValueImpl
+
+--------------------------------------------------------------------------------
+
+class ToJSON a where
+    toJSON :: a -> Value
+
+type Pair = Tuple String Value
+
+(.=) :: forall a. (ToJSON a) => String -> a -> Pair
+(.=) name value = Tuple name (toJSON value)
+
+object :: [Pair] -> Value
+object ps = Object $ M.fromList ps
+
+encode :: forall a. (ToJSON a) => a -> String
+encode a = valueToString $ toJSON a
+
+instance boolToJSON :: ToJSON Boolean where
+    toJSON = Bool
+
+instance numberToJSON :: ToJSON Number where
+    toJSON = Number
+
+instance stringToJSON :: ToJSON String where
+    toJSON = String
+
+instance unitToJSON :: ToJSON Unit where
+    toJSON _ = Null
+
+instance arrayToJSON :: (ToJSON a) => ToJSON [a] where
+    toJSON a = Array $ toJSON <$> a
+
+instance eitherToJSON :: (ToJSON a, ToJSON b) => ToJSON (Either a b) where
+    toJSON (Right r) = object ["Right" .= r]
+    toJSON (Left  l) = object ["Left"  .= l]
+
+instance mapToJSON :: (ToJSON a) => ToJSON (M.Map String a) where
+    toJSON m = Object $ M.map toJSON m
+
+instance maybeToJSON :: (ToJSON a) => ToJSON (Maybe a) where
+    toJSON Nothing  = Null
+    toJSON (Just a) = toJSON a
+
+instance setToJSON :: (ToJSON a) => ToJSON (S.Set a) where
+    toJSON s = Array $ toJSON <$> S.toList s
+
+instance tupleToJSON :: (ToJSON a, ToJSON b) => ToJSON (Tuple a b) where
+    toJSON (Tuple a b) = Array [toJSON a, toJSON b]
+
+instance valueToJSON :: ToJSON Value where
+    toJSON = id
+
+foreign import jsNull "var jsNull = null" :: JSON
+foreign import unsafeCoerce "function unsafeCoerce (a) {return a;}"
+    :: forall a b. a -> b
+
+foreign import objToHash
+    "function objToHash (obj) {\
+    \    var hash = {};\
+    \    for(var i = 0; i < obj.length; i++) {\
+    \        hash[Data_Tuple.fst(obj[i])] = valueToJSONImpl(Data_Tuple.snd(obj[i]));\
+    \    }\
+    \    return hash;\
+    \}" :: [Tuple String Value] -> JSON
+
+valueToJSONImpl :: Value -> JSON
+valueToJSONImpl (Object o) = objToHash $ M.toList o
+valueToJSONImpl (Array  a) = unsafeCoerce $ valueToJSONImpl <$> a
+valueToJSONImpl (String s) = unsafeCoerce s
+valueToJSONImpl (Number n) = unsafeCoerce n
+valueToJSONImpl (Bool   b) = unsafeCoerce b
+valueToJSONImpl Null       = jsNull
+
+foreign import jsonStringify
+    "function jsonStringify(json) {\
+    \    return JSON.stringify(json);\
+    \}" :: JSON -> String
+
+valueToString :: Value -> String
+valueToString v = jsonStringify $ valueToJSONImpl v

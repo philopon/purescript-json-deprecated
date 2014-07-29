@@ -18,9 +18,10 @@ test :: forall a r. (Eq a, Show a) => String -> a -> a
 test t a b =
     if a /= b
     then throwException $ t ++ " fail. expected: " ++ show a ++ ", but actual: " ++ show b
-    else Debug.Trace.trace $ t ++ " success."
+    else Debug.Trace.trace $ "    " ++ t ++ " success."
 
 main = do
+    trace "FromJSON"
     test "Number" (Just 12)    (decode "12" :: Maybe Number)
     test "String" (Just "foo") (decode "\"foo\"" :: Maybe String)
     test "Bool"   (Just true)  (decode "true" :: Maybe Boolean)
@@ -40,3 +41,24 @@ main = do
 
     test "Value"   (Just (Array [Number 1, Bool true, Object $ M.fromList [Tuple "foo" (Number 12), Tuple "bar" (Array [String "baz", Number 43])]]))
         (decode "[1,true,{\"foo\": 12, \"bar\": [\"baz\", 43]}]" :: Maybe Value)
+
+    trace "ToJSON"
+    test "Number" "12"    (encode 12)
+    test "String" "\"foo\""   (encode "foo")
+    test "Bool"   "true"  (encode true)
+    test "Unit"   "null"  (encode unit)
+
+    test "Array"  "[1,2,3,2,1]" (encode [1,2,3,2,1])
+    test "Set"    "[1,2,3]"     (encode $ S.fromList [1,2,3,2,1])
+    test "Tuple"  "[\"kevin\",18]" (encode $ Tuple "kevin" 18)
+    test "Map"    "{\"a\":1,\"b\":2}" (encode $ M.fromList [Tuple "a" 1, Tuple "b" 2])
+
+    test "Nothing" "null"  (encode (Nothing :: Maybe Number))
+    test "Just"    "3"     (encode (Just 3))
+
+    test "Left"    "{\"Left\":4}"     (encode (Left 4     :: Either Number Boolean))
+    test "Right"   "{\"Right\":true}" (encode (Right true :: Either Number Boolean))
+
+    test "Value"   "[1,true,{\"bar\":[\"baz\",43],\"foo\":12}]"
+        (encode (Array [Number 1, Bool true, Object $ M.fromList [Tuple "foo" (Number 12), Tuple "bar" (Array [String "baz", Number 43])]]))
+

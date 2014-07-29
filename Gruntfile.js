@@ -31,12 +31,35 @@ module.exports = function(grunt) {
         },
         src: ["tests/Test.purs", "<%=libFiles%>"],
         dest: "tmp/tests.js"
+      },
+      example_simple: {
+         options: {
+          module: ["Main"],
+          main: true
+        },
+        src: ["examples/Simple.purs", "<%=libFiles%>"],
+        dest: "tmp/example_simple.js"
+      },
+      example_complex: {
+         options: {
+          module: ["Main"],
+          main: true
+        },
+        src: ["examples/Complex.purs", "<%=libFiles%>"],
+        dest: "tmp/example_complex.js"
       }
+
     },
 
     execute: {
       tests: {
         src: "tmp/tests.js"
+      },
+      example_simple: {
+        src: "tmp/example_simple.js"
+      },
+      example_complex: {
+        src: "tmp/example_complex.js"
       },
       gen_readme: {
         src: "gen-readme.js"
@@ -51,5 +74,7 @@ module.exports = function(grunt) {
   
   grunt.registerTask("test", ["clean:tests", "psc:tests", "execute:tests"]);
   grunt.registerTask("make", ["pscMake", "dotPsci", "docgen", "execute:gen_readme"]);
+  grunt.registerTask("example_simple",  ["psc:example_simple",  "execute:example_simple"]);
+  grunt.registerTask("example_complex", ["psc:example_complex", "execute:example_complex"]);
   grunt.registerTask("default", ["test", "make"]);
 };
