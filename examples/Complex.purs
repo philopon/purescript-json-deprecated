@@ -1,4 +1,4 @@
-module Simple where
+module Main where
 
 import Control.Monad.Eff
 
@@ -19,6 +19,9 @@ instance fooFromJSON :: FromJSON Foo where
         Foo <$> parseJSON a <*> parseJSON b <*> parseJSON c
     parseJSON _ = fail "Foo parse failed."
 
+instance fooToJSON :: ToJSON Foo where
+    toJSON (Foo a b c) = Array [toJSON a, toJSON b, toJSON c]
+
 data Bar = Bar { bar1 :: String
                , bar2 :: Maybe String
                , bar3 :: String
@@ -27,10 +30,10 @@ data Bar = Bar { bar1 :: String
 
 instance showBar :: Show Bar where
     show (Bar { bar1 = b1, bar2 = b2, bar3 = b3, bar4 = b4 }) =
-        "Bar {bar1 = " ++ show b1 ++
-           ", bar2 = " ++ show b2 ++
-           ", bar3 = " ++ show b3 ++
-           ", bar4 = " ++ show b4 ++ "}"
+        "Bar {bar1: " ++ show b1 ++
+           ", bar2: " ++ show b2 ++
+           ", bar3: " ++ show b3 ++
+           ", bar4: " ++ show b4 ++ "}"
 
 instance barFromJSON :: FromJSON Bar where
     parseJSON (Object o) = do
@@ -41,6 +44,15 @@ instance barFromJSON :: FromJSON Bar where
         return $ Bar { bar1: b1, bar2: b2, bar3: b3, bar4: b4 }
     parseJSON _ = fail "Bar parse failed."
 
+instance barToJSON :: ToJSON Bar where
+    toJSON (Bar { bar1 = b1, bar2 = b2, bar3 = b3, bar4 = b4 }) =
+        object ["bar1" .= b1, "bar2" .= b2, "bar3" .= b3, "bar4" .= b4]
+
 main :: Eff (trace :: Debug.Trace.Trace) Unit
-main = Debug.Trace.print
-    (decode "{\"bar1\": \"bar1 value\", \"bar4\": [12,23,\"Kevin\"]}" :: Maybe Bar)
+main = do
+    Debug.Trace.trace "decode"
+    Debug.Trace.print (decode "{\"bar1\": \"bar1 value\", \"bar4\": [12,23,\"Kevin\"]}" :: Maybe Bar)
+
+    Debug.Trace.trace "\nencode"
+    Debug.Trace.trace (encode $ Bar {bar1: "bar1 value", bar2: Nothing, bar3: "default", bar4: Foo 12 23 "Kevin"})
+
