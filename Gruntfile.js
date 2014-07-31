@@ -19,7 +19,7 @@ module.exports = function(grunt) {
     docgen: {
         readme: {
             src: "src/**/*.purs",
-            dest: "tmp/documentation.md"
+            dest: "docs/Module.md"
         }
     },
 
@@ -60,9 +60,6 @@ module.exports = function(grunt) {
       },
       example_complex: {
         src: "tmp/example_complex.js"
-      },
-      gen_readme: {
-        src: "gen-readme.js"
       }
     }
 
@@ -73,7 +70,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks("grunt-execute");
   
   grunt.registerTask("test", ["clean:tests", "psc:tests", "execute:tests"]);
-  grunt.registerTask("make", ["pscMake", "dotPsci", "docgen", "execute:gen_readme"]);
+  grunt.registerTask("make", ["pscMake", "dotPsci", "docgen"]);
   grunt.registerTask("example_simple",  ["psc:example_simple",  "execute:example_simple"]);
   grunt.registerTask("example_complex", ["psc:example_complex", "execute:example_complex"]);
   grunt.registerTask("default", ["test", "make"]);
