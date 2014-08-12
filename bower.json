@@ -23,7 +23,7 @@
     "purescript-maybe":  "*",
     "purescript-tuples": "*",
     "purescript-either": "*"
-  }, 
+  },
   "devDependencies": {
     "purescript-exceptions": "*"
   }

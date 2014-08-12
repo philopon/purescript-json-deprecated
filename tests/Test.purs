@@ -14,10 +14,10 @@ import Data.Either
 import Data.JSON
 
 test :: forall a r. (Eq a, Show a) => String -> a -> a
-     -> Eff (err :: Exception String, trace :: Trace | r) Unit
+     -> Eff (err :: Exception, trace :: Trace | r) Unit
 test t a b =
     if a /= b
-    then throwException $ t ++ " fail. expected: " ++ show a ++ ", but actual: " ++ show b
+    then throwException $ error $ t ++ " fail. expected: " ++ show a ++ ", but actual: " ++ show b
     else Debug.Trace.trace $ "    " ++ t ++ " success."
 
 main = do
@@ -39,8 +39,8 @@ main = do
     test "Right"   (Just (Right true)) (decode "{\"Right\": true}" :: Maybe (Either Number Boolean))
     test "Both"    Nothing             (decode "{\"Left\": 4, \"Right\": true}" :: Maybe (Either Number Boolean))
 
-    test "Value"   (Just (Array [Number 1, Bool true, Object $ M.fromList [Tuple "foo" (Number 12), Tuple "bar" (Array [String "baz", Number 43])]]))
-        (decode "[1,true,{\"foo\": 12, \"bar\": [\"baz\", 43]}]" :: Maybe Value)
+    test "Value"   (Just (JArray [JNumber 1, JBool true, JObject $ M.fromList [Tuple "foo" (JNumber 12), Tuple "bar" (JArray [JString "baz", JNumber 43])]]))
+        (decode "[1,true,{\"foo\": 12, \"bar\": [\"baz\", 43]}]" :: Maybe JValue)
 
     trace "ToJSON"
     test "Number" "12"    (encode 12)
@@ -60,5 +60,4 @@ main = do
     test "Right"   "{\"Right\":true}" (encode (Right true :: Either Number Boolean))
 
     test "Value"   "[1,true,{\"bar\":[\"baz\",43],\"foo\":12}]"
-        (encode (Array [Number 1, Bool true, Object $ M.fromList [Tuple "foo" (Number 12), Tuple "bar" (Array [String "baz", Number 43])]]))
-
+        (encode (JArray [JNumber 1, JBool true, JObject $ M.fromList [Tuple "foo" (JNumber 12), Tuple "bar" (JArray [JString "baz", JNumber 43])]]))
