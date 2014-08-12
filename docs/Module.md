@@ -4,30 +4,30 @@
 
 ### Types
 
-    type Array  = [Value]
+    type JArray  = [JValue]
 
-    type Object  = M.Map String Value
+    type JObject  = M.Map String JValue
 
-    type Pair  = Tuple String Value
+    type JParser  = Either String
 
-    type Parser  = Either String
+    data JValue where
+      JObject :: JObject -> JValue
+      JArray :: JArray -> JValue
+      JString :: String -> JValue
+      JNumber :: Number -> JValue
+      JBool :: Boolean -> JValue
+      JNull :: JValue
 
-    data Value where
-      Object :: Object -> Value
-      Array :: Array -> Value
-      String :: String -> Value
-      Number :: Number -> Value
-      Bool :: Boolean -> Value
-      Null :: Value
+    type Pair  = Tuple String JValue
 
 
 ### Type Classes
 
     class FromJSON a where
-      parseJSON :: Value -> Parser a
+      parseJSON :: JValue -> JParser a
 
     class ToJSON a where
-      toJSON :: a -> Value
+      toJSON :: a -> JValue
 
 
 ### Type Class Instances
@@ -36,37 +36,37 @@
 
     instance arrayToJSON :: (ToJSON a) => ToJSON [a]
 
-    instance boolFromJSON :: FromJSON Prim.Boolean
+    instance boolFromJSON :: FromJSON Boolean
 
-    instance boolToJSON :: ToJSON Prim.Boolean
+    instance boolToJSON :: ToJSON Boolean
 
     instance eitherFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Either a b)
 
     instance eitherToJSON :: (ToJSON a, ToJSON b) => ToJSON (Either a b)
 
-    instance eqValue :: Eq Value
+    instance eqValue :: Eq JValue
 
-    instance mapFromJSON :: (Ord a, FromJSON a) => FromJSON (M.Map Prim.String a)
+    instance mapFromJSON :: (Ord a, FromJSON a) => FromJSON (M.Map String a)
 
-    instance mapToJSON :: (ToJSON a) => ToJSON (M.Map Prim.String a)
+    instance mapToJSON :: (ToJSON a) => ToJSON (M.Map String a)
 
     instance maybeFromJSON :: (FromJSON a) => FromJSON (Maybe a)
 
     instance maybeToJSON :: (ToJSON a) => ToJSON (Maybe a)
 
-    instance numberFromJSON :: FromJSON Prim.Number
+    instance numberFromJSON :: FromJSON Number
 
-    instance numberToJSON :: ToJSON Prim.Number
+    instance numberToJSON :: ToJSON Number
 
     instance setFromJSON :: (Ord a, FromJSON a) => FromJSON (S.Set a)
 
     instance setToJSON :: (ToJSON a) => ToJSON (S.Set a)
 
-    instance showValue :: Show Value
+    instance showValue :: Show JValue
 
-    instance stringFromJSON :: FromJSON Prim.String
+    instance stringFromJSON :: FromJSON String
 
-    instance stringToJSON :: ToJSON Prim.String
+    instance stringToJSON :: ToJSON String
 
     instance tupleFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Tuple a b)
 
@@ -76,18 +76,18 @@
 
     instance unitToJSON :: ToJSON Unit
 
-    instance valueFromJSON :: FromJSON Value
+    instance valueFromJSON :: FromJSON JValue
 
-    instance valueToJSON :: ToJSON Value
+    instance valueToJSON :: ToJSON JValue
 
 
 ### Values
 
-    (.!=) :: forall a. Parser (Maybe a) -> a -> Parser a
+    (.!=) :: forall a. JParser (Maybe a) -> a -> JParser a
 
-    (.:) :: forall a. (FromJSON a) => Object -> String -> Parser a
+    (.:) :: forall a. (FromJSON a) => JObject -> String -> JParser a
 
-    (.:?) :: forall a. (FromJSON a) => Object -> String -> Parser (Maybe a)
+    (.:?) :: forall a. (FromJSON a) => JObject -> String -> JParser (Maybe a)
 
     (.=) :: forall a. (ToJSON a) => String -> a -> Pair
 
@@ -97,6 +97,6 @@
 
     encode :: forall a. (ToJSON a) => a -> String
 
-    fail :: forall a. String -> Parser a
+    fail :: forall a. String -> JParser a
 
-    object :: [Pair] -> Value
+    object :: [Pair] -> JValue

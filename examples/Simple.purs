@@ -26,7 +26,7 @@ main = do
     Debug.Trace.print (decode "{\"Left\": true}" :: Maybe (Either Boolean Number))
 
 
-    Debug.Trace.print (decode "[{\"foo\": [1,2,3]}, true]" :: Maybe Value)
+    Debug.Trace.print (decode "[{\"foo\": [1,2,3]}, true]" :: Maybe JValue)
 
     Debug.Trace.trace "\nencode"
     Debug.Trace.trace (encode 12)
@@ -42,5 +42,5 @@ main = do
     Debug.Trace.trace (encode (Just 12))
     Debug.Trace.trace (encode (Left true :: Either Boolean Number))
 
-    Debug.Trace.trace (encode $ Array [object ["foo" .= Array [Number 1,Number 2,Number 3]], Bool true])
+    Debug.Trace.trace (encode $ JArray [object ["foo" .= JArray [JNumber 1,JNumber 2,JNumber 3]], JBool true])
 
