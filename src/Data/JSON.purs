@@ -143,51 +143,82 @@ foreign import jsonParseImpl
 jsonParse :: String -> Either String JSON
 jsonParse = runFn3 jsonParseImpl Left Right
 
-foreign import jsonToValueImpl
-    "function jsonToValueImpl (json) {\
-    \    var typ    = Object.prototype.toString.call(json).slice(8,-1); \
-    \    var right = Data_Either.Right; \
-    \    var left  = Data_Either.Left; \
-    \    if        (typ === 'Number') { \
-    \        return right(Number(json));\
-    \\
-    \    } else if (typ === 'Boolean') { \
-    \        return right(Bool(json));\
-    \\
-    \    } else if (typ === 'String') { \
-    \        return right(String(json));\
-    \\
-    \    } else if (typ === 'Null') { \
-    \        return right(Null);\
-    \\
-    \    } else if (typ === 'Array') { \
-    \        var ary = [];\
-    \        for(var i = 0; i < json.length; i++) { \
-    \            Data_Either.either \
-    \                (function(l){return left(l)}) \
-    \                (function(r){ary.push(r)}) \
-    \                (jsonToValueImpl(json[i])) \
-    \        } \
-    \        return right(Array(ary));\
-    \\
-    \    } else if (typ === 'Object') {\
-    \        var insert = Data_Function.mkFn3(Data_Map.insert(Prelude.ordString()));\
-    \        var obj = Data_Map.empty;\
-    \        for(var k in json) { \
-    \            Data_Either.either \
-    \                (function(l){return left(l)}) \
-    \                (function(r){obj = insert(k, r, obj)}) \
-    \                (jsonToValueImpl(json[k]));\
-    \        } \
-    \        return right(Object(obj));\
-    \\
-    \    } else { \
-    \        return left('unknown type: ' + typ);\
-    \    }\
-    \}" :: JSON -> Either String Value
+type Ctors = { null   :: JValue
+             , number :: Number  -> JValue
+             , bool   :: Boolean -> JValue
+             , string :: String  -> JValue
+             , array  :: JArray  -> JValue
+             , object :: JObject -> JValue
+             }
 
-jsonToValue :: String -> Either String Value
-jsonToValue = runFn3 jsonParseImpl Left jsonToValueImpl
+type Auxes = { left   :: String -> Either String JValue
+             , right  :: JValue -> Either String JValue
+             , either :: forall c. (String -> c) -> (JValue -> c) -> Either String JValue -> c
+             , insert :: String -> JValue -> JObject -> JObject
+             , empty  :: JObject
+             }
+
+foreign import jsonToValueImpl
+    "function jsonToValueImpl (auxes, ctors) {\
+    \    var left   = auxes.left;\
+    \    var right  = auxes.right;\
+    \    var either = auxes.either;\
+    \    var insert = auxes.insert;\
+    \    var empty  = auxes.empty;\
+    \    var Null   = ctors.null;\
+    \    var Number = ctors.number;\
+    \    var Bool   = ctors.bool;\
+    \    var String = ctors.string;\
+    \    var Array  = ctors.array;\
+    \    var Object = ctors.object;\
+    \    var parse  = function(json) {\
+    \        var typ    = Object.prototype.toString.call(json).slice(8,-1); \
+    \        if        (typ === 'Number') { \
+    \            return right(Number(json));\
+    \\
+    \        } else if (typ === 'Boolean') { \
+    \            return right(Bool(json));\
+    \\
+    \        } else if (typ === 'String') { \
+    \            return right(String(json));\
+    \\
+    \        } else if (typ === 'Null') { \
+    \            return right(Null);\
+    \\
+    \        } else if (typ === 'Array') { \
+    \            var ary = [];\
+    \            for(var i = 0; i < json.length; i++) { \
+    \                either \
+    \                    (function(l){return left(l)}) \
+    \                    (function(r){ary.push(r)}) \
+    \                    (parse(json[i])) \
+    \            } \
+    \            return right(Array(ary));\
+    \\
+    \        } else if (typ === 'Object') {\
+    \            var obj = empty;\
+    \            for(var k in json) { \
+    \                either \
+    \                    (function(l){return left(l)}) \
+    \                    (function(r){obj = insert(k)(r)(obj)}) \
+    \                    (parse(json[k]));\
+    \            } \
+    \            return right(Object(obj));\
+    \\
+    \        } else { \
+    \            return left('unknown type: ' + typ);\
+    \        }\
+    \   };\
+    \   return parse;\
+    \}" :: Fn2 Auxes Ctors (JSON -> Either String JValue)
+
+jsonToValue :: String -> Either String JValue
+jsonToValue = runFn3 jsonParseImpl Left (runFn2 jsonToValueImpl auxes ctors)
+  where
+    ctors = { null: JNull, number: JNumber, bool: JBool, string: JString, array: JArray, object: JObject }
+    auxes = { left: Left, right: Right, either: either, insert: insert', empty: empty' }
+    insert' = M.insert :: String -> JValue -> JObject -> JObject
+    empty'  = M.empty :: JObject
 
 --------------------------------------------------------------------------------
 
