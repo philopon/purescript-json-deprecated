@@ -276,16 +276,19 @@ foreign import unsafeCoerce "function unsafeCoerce (a) {return a;}"
     :: forall a b. a -> b
 
 foreign import objToHash
-    "function objToHash (obj) {\
+    "function objToHash (fst, snd, obj) {\
     \    var hash = {};\
     \    for(var i = 0; i < obj.length; i++) {\
-    \        hash[Data_Tuple.fst(obj[i])] = valueToJSONImpl(Data_Tuple.snd(obj[i]));\
+    \        hash[fst(obj[i])] = valueToJSONImpl(snd(obj[i]));\
     \    }\
     \    return hash;\
-    \}" :: [Tuple String JValue] -> JSON
+    \}" :: Fn3 (Tuple String JValue -> String)
+               (Tuple String JValue -> JValue)
+               [Tuple String JValue]
+               JSON
 
 valueToJSONImpl :: JValue -> JSON
-valueToJSONImpl (JObject o) = objToHash $ M.toList o
+valueToJSONImpl (JObject o) = runFn3 objToHash fst snd $ M.toList o
 valueToJSONImpl (JArray  a) = unsafeCoerce $ valueToJSONImpl <$> a
 valueToJSONImpl (JString s) = unsafeCoerce s
 valueToJSONImpl (JNumber n) = unsafeCoerce n
