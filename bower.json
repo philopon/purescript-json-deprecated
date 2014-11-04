@@ -22,7 +22,8 @@
     "purescript-maps":   "*",
     "purescript-maybe":  "*",
     "purescript-tuples": "*",
-    "purescript-either": "*"
+    "purescript-either": "*",
+    "purescript-sets":   "*"
   },
   "devDependencies": {
     "purescript-exceptions": "*"
