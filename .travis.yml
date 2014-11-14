@@ -3,9 +3,12 @@ node_js:
   - "0.11"
   - "0.10"
 install:
-  - sudo apt-get install cabal-install
-  - cabal update
-  - cabal install Cabal cabal-install
+  - sudo add-apt-repository ppa:hvr/ghc -y
+  - sudo apt-get update -q
+  - sudo apt-get install cabal-install-1.20 ghc-7.8.3 zlib1g-dev libtinfo-dev
+  - export PATH=/opt/ghc/7.8.3/bin:$PATH
+  - cabal-1.20 update
+  - cabal-1.20 install Cabal cabal-install
   - export PATH=~/.cabal/bin:$PATH
   - cabal install purescript --force-reinstalls
   - npm install
