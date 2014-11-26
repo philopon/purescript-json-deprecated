@@ -14,6 +14,7 @@ import Data.Either
 import Data.Maybe
 import Data.Function
 import Data.Tuple
+import Data.Traversable
 
 type JObject = M.Map String JValue
 type JArray  = [JValue]
@@ -62,13 +63,6 @@ decode s = case eitherDecode s of
 
 fail :: forall a. String -> JParser a
 fail = Left
-
-sequence :: forall m a. (Monad m) => [m a] -> m [a]
-sequence [] = return []
-sequence (a:as) = do
-    a' <- a
-    as' <- sequence as
-    return (a' : as')
 
 instance valueFromJSON :: FromJSON JValue where
     parseJSON = Right
