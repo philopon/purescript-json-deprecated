@@ -4,11 +4,11 @@
 
 ### Types
 
-    type JArray  = [JValue]
+    type JArray = [JValue]
 
-    type JObject  = M.Map String JValue
+    type JObject = M.Map String JValue
 
-    type JParser  = Either String
+    type JParser = Either String
 
     data JValue where
       JObject :: JObject -> JValue
@@ -18,7 +18,7 @@
       JBool :: Boolean -> JValue
       JNull :: JValue
 
-    type Pair  = Tuple String JValue
+    type Pair = Tuple String JValue
 
 
 ### Type Classes
