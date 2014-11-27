@@ -23,7 +23,8 @@
     "purescript-maybe":  "*",
     "purescript-tuples": "*",
     "purescript-either": "*",
-    "purescript-sets":   "*"
+    "purescript-sets":   "*",
+    "purescript-foldable-traversable" : "*"
   },
   "devDependencies": {
     "purescript-exceptions": "*"
