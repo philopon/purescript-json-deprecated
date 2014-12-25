@@ -43,4 +43,4 @@ gulp.task('test', function(){
     .pipe(mocha());
 });
 
-gulp.task('default', ['pscMake', 'dotPsci', 'pscDocs']);
+gulp.task('default', ['pscMake', 'dotPsci', 'pscDocs', 'test']);
