@@ -31,5 +31,9 @@
   "devDependencies": {
     "purescript-simple-assert": "~0.1.0",
     "purescript-mocha": "~0.0.3"
+  },
+  "resolutions": {
+    "purescript-foldable-traversable": "~0.2.1",
+    "purescript-arrays": "~0.3.0"
   }
 }
