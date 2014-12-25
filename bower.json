@@ -13,20 +13,23 @@
     "node_modules",
     "output",
     "tests",
+    "test",
     "tmp",
     "bower.json",
     "Gruntfile.js",
     "package.json"
   ],
   "dependencies": {
-    "purescript-maps":   "*",
-    "purescript-maybe":  "*",
-    "purescript-tuples": "*",
-    "purescript-either": "*",
-    "purescript-sets":   "*",
-    "purescript-foldable-traversable" : "*"
+    "purescript-maps": "~0.1.0",
+    "purescript-maybe": "~0.2.1",
+    "purescript-tuples": "~0.2.3",
+    "purescript-either": "~0.1.0",
+    "purescript-sets": "~0.1.0",
+    "purescript-foldable-traversable": "~0.2.1",
+    "purescript-exceptions": "~0.2.2"
   },
   "devDependencies": {
-    "purescript-exceptions": "*"
+    "purescript-simple-assert": "~0.1.0",
+    "purescript-mocha": "~0.0.3"
   }
 }
