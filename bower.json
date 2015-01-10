@@ -1,6 +1,6 @@
 {
   "name": "purescript-json",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "homepage": "https://github.com/philopon/purescript-json",
   "description": "JSON Type",
   "keywords": [
@@ -20,20 +20,12 @@
     "package.json"
   ],
   "dependencies": {
-    "purescript-maps": "~0.1.0",
+    "purescript-sets": "~0.2.0",
+    "purescript-maps": "~0.2.0",
     "purescript-maybe": "~0.2.1",
     "purescript-tuples": "~0.2.3",
-    "purescript-either": "~0.1.0",
-    "purescript-sets": "~0.1.0",
+    "purescript-either": "~0.1.4",
     "purescript-foldable-traversable": "~0.2.1",
     "purescript-exceptions": "~0.2.2"
-  },
-  "devDependencies": {
-    "purescript-simple-assert": "~0.2.1",
-    "purescript-mocha": "~0.0.3"
-  },
-  "resolutions": {
-    "purescript-foldable-traversable": "~0.2.1",
-    "purescript-arrays": "~0.3.0"
   }
 }
