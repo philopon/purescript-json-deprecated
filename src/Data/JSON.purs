@@ -135,7 +135,7 @@ foreign import jsonParseImpl
     \}" :: forall a. Fn3 (String -> a) (JSON -> a) String a
 
 jsonParse :: String -> Either String JSON
-jsonParse = runFn3 jsonParseImpl Left Right
+jsonParse s = runFn3 jsonParseImpl Left Right s
 
 type Ctors = { null   :: JValue
              , number :: Number  -> JValue
@@ -207,7 +207,7 @@ foreign import jsonToValueImpl
     \}" :: Fn2 Auxes Ctors (JSON -> Either String JValue)
 
 jsonToValue :: String -> Either String JValue
-jsonToValue = runFn3 jsonParseImpl Left (runFn2 jsonToValueImpl auxes ctors)
+jsonToValue s = runFn3 jsonParseImpl Left (runFn2 jsonToValueImpl auxes ctors) s
   where
     ctors = { null: JNull, number: JNumber, bool: JBool, string: JString, array: JArray, object: JObject }
     auxes = { left: Left, right: Right, either: either, insert: insert', empty: empty' }
