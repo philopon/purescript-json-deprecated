@@ -13,14 +13,15 @@ import Data.Either
 
 import Data.JSON
 
-import Test.Mocha
+import Test.PSpec
+import Test.PSpec.Mocha
 import Test.Assert.Simple
 
 itDecode t = it $ t ++ " should decode"
 
 itEncode t = it $ t ++ " should encode"
 
-main = do
+main = runMocha $ do
   describe "FromJSON" $ do
     itDecode "Number"  $ Just 12 @=? (decode "12" :: Maybe Number)
     itDecode "String"  $ Just "foo" @=? (decode "\"foo\"" :: Maybe String)

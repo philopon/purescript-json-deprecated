@@ -27,5 +27,9 @@
     "purescript-either": "~0.1.4",
     "purescript-foldable-traversable": "~0.2.1",
     "purescript-exceptions": "~0.2.2"
+  },
+  "devDependencies": {
+    "purescript-simple-assert": "~0.2.1",
+    "purescript-pspec": "~0.6.1"
   }
 }
