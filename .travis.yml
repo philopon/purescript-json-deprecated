@@ -3,7 +3,7 @@ node_js:
   - "0.11"
   - "0.10"
 install:
-  - curl -L -O https://github.com/purescript/purescript/releases/download/v0.6.2/linux64.tar.gz
+  - curl -s https://gist.githubusercontent.com/philopon/d45eb98d5976c6531217/raw/download-latest-purescript.sh | bash
   - tar xvf linux64.tar.gz
   - export PATH=`pwd`/purescript:$PATH
   - npm install
