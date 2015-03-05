@@ -106,7 +106,7 @@ instance maybeFromJSON :: (FromJSON a) => FromJSON (Maybe a) where
 instance setFromJSON :: (Ord a, FromJSON a) => FromJSON (S.Set a) where
     parseJSON a = S.fromList <$> parseJSON a
 
-instance mapFromJSON :: (Ord a, FromJSON a) => FromJSON (M.Map String a) where
+instance mapFromJSON :: (FromJSON a) => FromJSON (M.Map String a) where
     parseJSON (JObject o) = M.fromList <$> (sequence $ fn <$> M.toList o)
       where
         fn (Tuple k v) = case parseJSON v of
