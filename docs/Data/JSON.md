@@ -2,148 +2,291 @@
 
 ## Module Data.JSON
 
-### Types
+#### `JObject`
 
+``` purescript
+type JObject = M.Map String JValue
+```
 
-    type JArray = [JValue]
 
+#### `JArray`
 
-    type JObject = M.Map String JValue
+``` purescript
+type JArray = [JValue]
+```
 
 
-    type JParser = Either String
+#### `JParser`
 
+``` purescript
+type JParser = Either String
+```
 
-    data JValue where
-      JObject :: JObject -> JValue
-      JArray :: JArray -> JValue
-      JString :: String -> JValue
-      JNumber :: Number -> JValue
-      JBool :: Boolean -> JValue
-      JNull :: JValue
 
+#### `JValue`
 
-    type Pair = Tuple String JValue
+``` purescript
+data JValue
+  = JObject JObject
+  | JArray JArray
+  | JString String
+  | JNumber Number
+  | JBool Boolean
+  | JNull 
+```
 
 
-### Type Classes
+#### `showValue`
 
-    ------------------------------------------------------------------------------
+``` purescript
+instance showValue :: Show JValue
+```
 
-    class FromJSON a where
 
-      parseJSON :: JValue -> JParser a
+#### `eqValue`
 
-    ------------------------------------------------------------------------------
+``` purescript
+instance eqValue :: Eq JValue
+```
 
-    class ToJSON a where
 
-      toJSON :: a -> JValue
+#### `FromJSON`
 
+``` purescript
+class FromJSON a where
+  parseJSON :: JValue -> JParser a
+```
 
-### Type Class Instances
+#### `eitherDecode`
 
+``` purescript
+eitherDecode :: forall a. (FromJSON a) => String -> Either String a
+```
 
-    instance arrayFromJSON :: (FromJSON a) => FromJSON [a]
 
+#### `decode`
 
-    instance arrayToJSON :: (ToJSON a) => ToJSON [a]
+``` purescript
+decode :: forall a. (FromJSON a) => String -> Maybe a
+```
 
 
-    instance boolFromJSON :: FromJSON Boolean
+#### `fail`
 
+``` purescript
+fail :: forall a. String -> JParser a
+```
 
-    instance boolToJSON :: ToJSON Boolean
 
+#### `valueFromJSON`
 
-    instance eitherFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Either a b)
+``` purescript
+instance valueFromJSON :: FromJSON JValue
+```
 
 
-    instance eitherToJSON :: (ToJSON a, ToJSON b) => ToJSON (Either a b)
+#### `boolFromJSON`
 
+``` purescript
+instance boolFromJSON :: FromJSON Boolean
+```
 
-    instance eqValue :: Eq JValue
 
+#### `numberFromJSON`
 
-    instance mapFromJSON :: (Ord a, FromJSON a) => FromJSON (M.Map String a)
+``` purescript
+instance numberFromJSON :: FromJSON Number
+```
 
 
-    instance mapToJSON :: (ToJSON a) => ToJSON (M.Map String a)
+#### `unitFromJSON`
 
+``` purescript
+instance unitFromJSON :: FromJSON Unit
+```
 
-    instance maybeFromJSON :: (FromJSON a) => FromJSON (Maybe a)
 
+#### `stringFromJSON`
 
-    instance maybeToJSON :: (ToJSON a) => ToJSON (Maybe a)
+``` purescript
+instance stringFromJSON :: FromJSON String
+```
 
 
-    instance numberFromJSON :: FromJSON Number
+#### `arrayFromJSON`
 
+``` purescript
+instance arrayFromJSON :: (FromJSON a) => FromJSON [a]
+```
 
-    instance numberToJSON :: ToJSON Number
 
+#### `tupleFromJSON`
 
-    instance setFromJSON :: (Ord a, FromJSON a) => FromJSON (S.Set a)
+``` purescript
+instance tupleFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Tuple a b)
+```
 
 
-    instance setToJSON :: (ToJSON a) => ToJSON (S.Set a)
+#### `eitherFromJSON`
 
+``` purescript
+instance eitherFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Either a b)
+```
 
-    instance showValue :: Show JValue
 
+#### `maybeFromJSON`
 
-    instance stringFromJSON :: FromJSON String
+``` purescript
+instance maybeFromJSON :: (FromJSON a) => FromJSON (Maybe a)
+```
 
 
-    instance stringToJSON :: ToJSON String
+#### `setFromJSON`
 
+``` purescript
+instance setFromJSON :: (Ord a, FromJSON a) => FromJSON (S.Set a)
+```
 
-    instance tupleFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Tuple a b)
 
+#### `mapFromJSON`
 
-    instance tupleToJSON :: (ToJSON a, ToJSON b) => ToJSON (Tuple a b)
+``` purescript
+instance mapFromJSON :: (FromJSON a) => FromJSON (M.Map String a)
+```
 
 
-    instance unitFromJSON :: FromJSON Unit
+#### `(.:)`
 
+``` purescript
+(.:) :: forall a. (FromJSON a) => JObject -> String -> JParser a
+```
 
-    instance unitToJSON :: ToJSON Unit
 
+#### `(.:?)`
 
-    instance valueFromJSON :: FromJSON JValue
+``` purescript
+(.:?) :: forall a. (FromJSON a) => JObject -> String -> JParser (Maybe a)
+```
 
 
-    instance valueToJSON :: ToJSON JValue
+#### `(.!=)`
 
+``` purescript
+(.!=) :: forall a. JParser (Maybe a) -> a -> JParser a
+```
 
-### Values
 
+#### `ToJSON`
 
-    (.!=) :: forall a. JParser (Maybe a) -> a -> JParser a
+``` purescript
+class ToJSON a where
+  toJSON :: a -> JValue
+```
 
+#### `Pair`
 
-    (.:) :: forall a. (FromJSON a) => JObject -> String -> JParser a
+``` purescript
+type Pair = Tuple String JValue
+```
 
 
-    (.:?) :: forall a. (FromJSON a) => JObject -> String -> JParser (Maybe a)
+#### `(.=)`
 
+``` purescript
+(.=) :: forall a. (ToJSON a) => String -> a -> Pair
+```
 
-    (.=) :: forall a. (ToJSON a) => String -> a -> Pair
 
+#### `object`
 
-    decode :: forall a. (FromJSON a) => String -> Maybe a
+``` purescript
+object :: [Pair] -> JValue
+```
 
 
-    eitherDecode :: forall a. (FromJSON a) => String -> Either String a
+#### `encode`
 
+``` purescript
+encode :: forall a. (ToJSON a) => a -> String
+```
 
-    encode :: forall a. (ToJSON a) => a -> String
 
+#### `boolToJSON`
 
-    fail :: forall a. String -> JParser a
+``` purescript
+instance boolToJSON :: ToJSON Boolean
+```
 
 
-    object :: [Pair] -> JValue
+#### `numberToJSON`
+
+``` purescript
+instance numberToJSON :: ToJSON Number
+```
+
+
+#### `stringToJSON`
+
+``` purescript
+instance stringToJSON :: ToJSON String
+```
+
+
+#### `unitToJSON`
+
+``` purescript
+instance unitToJSON :: ToJSON Unit
+```
+
+
+#### `arrayToJSON`
+
+``` purescript
+instance arrayToJSON :: (ToJSON a) => ToJSON [a]
+```
+
+
+#### `eitherToJSON`
+
+``` purescript
+instance eitherToJSON :: (ToJSON a, ToJSON b) => ToJSON (Either a b)
+```
+
+
+#### `mapToJSON`
+
+``` purescript
+instance mapToJSON :: (ToJSON a) => ToJSON (M.Map String a)
+```
+
+
+#### `maybeToJSON`
+
+``` purescript
+instance maybeToJSON :: (ToJSON a) => ToJSON (Maybe a)
+```
+
+
+#### `setToJSON`
+
+``` purescript
+instance setToJSON :: (ToJSON a) => ToJSON (S.Set a)
+```
+
+
+#### `tupleToJSON`
+
+``` purescript
+instance tupleToJSON :: (ToJSON a, ToJSON b) => ToJSON (Tuple a b)
+```
+
+
+#### `valueToJSON`
+
+``` purescript
+instance valueToJSON :: ToJSON JValue
+```
+
 
 
 
