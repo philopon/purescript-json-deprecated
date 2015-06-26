@@ -112,6 +112,7 @@ instance mapFromJSON :: (FromJSON a) => FromJSON (M.Map String a) where
         fn (Tuple k v) = case parseJSON v of
             Right r -> return (Tuple k r)
             Left  l -> fail l
+    parseJSON i = fail $ show i ++ " is not (Map String a)."
 
 (.:) :: forall a. (FromJSON a) => JObject -> String -> JParser a
 (.:) obj key = case M.lookup key obj of
