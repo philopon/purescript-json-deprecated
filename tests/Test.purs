@@ -3,8 +3,6 @@ module Test.Main where
 import Control.Monad.Eff
 import Control.Monad.Eff.Exception
 
-import Debug.Trace
-
 import qualified Data.Set as S
 import qualified Data.Map as M
 import Data.Tuple
@@ -28,7 +26,7 @@ main = runMocha $ do
     itDecode "Boolean" $ Just true @=? (decode "true" :: Maybe Boolean)
     itDecode "Unit"    $ Just unit @=? (decode "null" :: Maybe Unit)
 
-    itDecode "Array"   $ Just [1,2,3,2,1] @=? (decode "[1,2,3,2,1]" :: Maybe [Number])
+    itDecode "Array"   $ Just [1,2,3,2,1] @=? (decode "[1,2,3,2,1]" :: Maybe (Array Number))
     itDecode "Set"     $ Just (S.fromList [1,2,3]) @=? (decode "[1,2,3,2,1]" :: Maybe (S.Set Number))
     itDecode "Tuple"   $ Just (Tuple "kevin" 18)   @=? (decode "[\"kevin\", 18]" :: Maybe (Tuple String Number))
     itDecode "Map"     $ Just (M.fromList [Tuple "a" 3, Tuple "b" 2]) @=? (decode "{\"a\": 1, \"b\": 2, \"a\": 3}" :: Maybe (M.Map String Number))

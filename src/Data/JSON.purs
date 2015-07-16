@@ -8,6 +8,7 @@ module Data.JSON
     , Pair(..), (.=), object
     ) where
 
+import Prelude
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.Either
@@ -15,9 +16,10 @@ import Data.Maybe
 import Data.Function
 import Data.Tuple
 import Data.Traversable
+import Data.List(fromList,toList,List(..))
 
 type JObject = M.Map String JValue
-type JArray  = [JValue]
+type JArray  = Array JValue
 type JParser = Either String
 
 data JValue
@@ -37,14 +39,13 @@ instance showValue :: Show JValue where
     show JNull       = "JNull"
 
 instance eqValue :: Eq JValue where
-    (==) (JObject a) (JObject b) = a == b
-    (==) (JArray  a) (JArray  b) = a == b
-    (==) (JString a) (JString b) = a == b
-    (==) (JNumber a) (JNumber b) = a == b
-    (==) (JBool   a) (JBool   b) = a == b
-    (==) JNull       JNull       = true
-    (==) _          _            = false
-    (/=) a          b            = not (a == b)
+    eq (JObject a) (JObject b) = a == b
+    eq (JArray  a) (JArray  b) = a == b
+    eq (JString a) (JString b) = a == b
+    eq (JNumber a) (JNumber b) = a == b
+    eq (JBool   a) (JBool   b) = a == b
+    eq JNull       JNull       = true
+    eq _          _            = false
 
 --------------------------------------------------------------------------------
 
@@ -83,7 +84,7 @@ instance stringFromJSON :: FromJSON String where
     parseJSON (JString s) = return s
     parseJSON i          = fail $ show i ++ " is not String."
 
-instance arrayFromJSON :: (FromJSON a) => FromJSON [a] where
+instance arrayFromJSON :: (FromJSON a) => FromJSON (Array a) where
     parseJSON (JArray a) = sequence $ parseJSON <$> a
     parseJSON i          = fail $ show i ++ " is not [a]."
 
@@ -92,7 +93,7 @@ instance tupleFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Tuple a b) where
     parseJSON i              = fail $ show i ++ " is not (a,b)."
 
 instance eitherFromJSON :: (FromJSON a, FromJSON b) => FromJSON (Either a b) where
-    parseJSON (JObject obj) = case M.toList obj of
+    parseJSON (JObject obj) = case fromList $ M.toList obj of
         [Tuple "Right" r] -> Right <$> parseJSON r
         [Tuple "Left"  l] -> Left  <$> parseJSON l
         _                 -> fail $ show obj ++ " is not (Either a b)."
@@ -104,7 +105,7 @@ instance maybeFromJSON :: (FromJSON a) => FromJSON (Maybe a) where
         Right r -> Just r
 
 instance setFromJSON :: (Ord a, FromJSON a) => FromJSON (S.Set a) where
-    parseJSON a = S.fromList <$> parseJSON a
+    parseJSON x = S.fromList <$> toList <$> (parseJSON x :: JParser (Array a))
 
 instance mapFromJSON :: (FromJSON a) => FromJSON (M.Map String a) where
     parseJSON (JObject o) = M.fromList <$> (sequence $ fn <$> M.toList o)
@@ -129,11 +130,7 @@ instance mapFromJSON :: (FromJSON a) => FromJSON (M.Map String a) where
 
 foreign import data JSON :: *
 
-foreign import jsonParseImpl
-    "function jsonParseImpl (left, right, string) {\
-    \    try       { return right(JSON.parse(string)); }\
-    \    catch (e) { return left(e.toString()); }\
-    \}" :: forall a. Fn3 (String -> a) (JSON -> a) String a
+foreign import jsonParseImpl :: forall a. Fn3 (String -> a) (JSON -> a) String a
 
 jsonParse :: String -> Either String JSON
 jsonParse s = runFn3 jsonParseImpl Left Right s
@@ -153,59 +150,7 @@ type Auxes = { left   :: String -> Either String JValue
              , empty  :: JObject
              }
 
-foreign import jsonToValueImpl
-    "function jsonToValueImpl (auxes, ctors) {\
-    \    var left   = auxes.left;\
-    \    var right  = auxes.right;\
-    \    var either = auxes.either;\
-    \    var insert = auxes.insert;\
-    \    var empty  = auxes.empty;\
-    \    var Null   = ctors.null;\
-    \    var Number = ctors.number;\
-    \    var Bool   = ctors.bool;\
-    \    var String = ctors.string;\
-    \    var Array  = ctors.array;\
-    \    var Object = ctors.object;\
-    \    var parse  = function(json) {\
-    \        var typ    = Object.prototype.toString.call(json).slice(8,-1); \
-    \        if        (typ === 'Number') { \
-    \            return right(Number(json));\
-    \\
-    \        } else if (typ === 'Boolean') { \
-    \            return right(Bool(json));\
-    \\
-    \        } else if (typ === 'String') { \
-    \            return right(String(json));\
-    \\
-    \        } else if (typ === 'Null') { \
-    \            return right(Null);\
-    \\
-    \        } else if (typ === 'Array') { \
-    \            var ary = [];\
-    \            for(var i = 0; i < json.length; i++) { \
-    \                either \
-    \                    (function(l){return left(l)}) \
-    \                    (function(r){ary.push(r)}) \
-    \                    (parse(json[i])) \
-    \            } \
-    \            return right(Array(ary));\
-    \\
-    \        } else if (typ === 'Object') {\
-    \            var obj = empty;\
-    \            for(var k in json) { \
-    \                either \
-    \                    (function(l){return left(l)}) \
-    \                    (function(r){obj = insert(k)(r)(obj)}) \
-    \                    (parse(json[k]));\
-    \            } \
-    \            return right(Object(obj));\
-    \\
-    \        } else { \
-    \            return left('unknown type: ' + typ);\
-    \        }\
-    \   };\
-    \   return parse;\
-    \}" :: Fn2 Auxes Ctors (JSON -> Either String JValue)
+foreign import jsonToValueImpl :: Fn2 Auxes Ctors (JSON -> Either String JValue)
 
 jsonToValue :: String -> Either String JValue
 jsonToValue s = runFn3 jsonParseImpl Left (runFn2 jsonToValueImpl auxes ctors) s
@@ -225,8 +170,8 @@ type Pair = Tuple String JValue
 (.=) :: forall a. (ToJSON a) => String -> a -> Pair
 (.=) name value = Tuple name (toJSON value)
 
-object :: [Pair] -> JValue
-object ps = JObject $ M.fromList ps
+object :: Array Pair -> JValue
+object ps = JObject $ M.fromList $ toList $ ps
 
 encode :: forall a. (ToJSON a) => a -> String
 encode a = valueToString $ toJSON a
@@ -243,7 +188,7 @@ instance stringToJSON :: ToJSON String where
 instance unitToJSON :: ToJSON Unit where
     toJSON _ = JNull
 
-instance arrayToJSON :: (ToJSON a) => ToJSON [a] where
+instance arrayToJSON :: (ToJSON a) => ToJSON (Array a) where
     toJSON a = JArray $ toJSON <$> a
 
 instance eitherToJSON :: (ToJSON a, ToJSON b) => ToJSON (Either a b) where
@@ -251,14 +196,14 @@ instance eitherToJSON :: (ToJSON a, ToJSON b) => ToJSON (Either a b) where
     toJSON (Left  l) = object ["Left"  .= l]
 
 instance mapToJSON :: (ToJSON a) => ToJSON (M.Map String a) where
-    toJSON m = JObject $ M.map toJSON m
+    toJSON m = JObject $ map toJSON m
 
 instance maybeToJSON :: (ToJSON a) => ToJSON (Maybe a) where
     toJSON Nothing  = JNull
     toJSON (Just a) = toJSON a
 
 instance setToJSON :: (ToJSON a) => ToJSON (S.Set a) where
-    toJSON s = JArray $ toJSON <$> S.toList s
+    toJSON s = JArray $ fromList $ toJSON <$> S.toList s
 
 instance tupleToJSON :: (ToJSON a, ToJSON b) => ToJSON (Tuple a b) where
     toJSON (Tuple a b) = JArray [toJSON a, toJSON b]
@@ -266,34 +211,23 @@ instance tupleToJSON :: (ToJSON a, ToJSON b) => ToJSON (Tuple a b) where
 instance valueToJSON :: ToJSON JValue where
     toJSON = id
 
-foreign import jsNull "var jsNull = null" :: JSON
-foreign import unsafeCoerce "function unsafeCoerce (a) {return a;}"
-    :: forall a b. a -> b
+foreign import jsNull :: JSON
+foreign import unsafeCoerce :: forall a b. a -> b
 
-foreign import objToHash
-    "function objToHash (fst, snd, obj) {\
-    \    var hash = {};\
-    \    for(var i = 0; i < obj.length; i++) {\
-    \        hash[fst(obj[i])] = valueToJSONImpl(snd(obj[i]));\
-    \    }\
-    \    return hash;\
-    \}" :: Fn3 (Tuple String JValue -> String)
+foreign import objToHash :: Fn3 (Tuple String JValue -> String)
                (Tuple String JValue -> JValue)
-               [Tuple String JValue]
+               (Array (Tuple String JValue))
                JSON
 
 valueToJSONImpl :: JValue -> JSON
-valueToJSONImpl (JObject o) = runFn3 objToHash fst snd $ M.toList o
+valueToJSONImpl (JObject o) = runFn3 objToHash fst snd $ fromList $ M.toList o
 valueToJSONImpl (JArray  a) = unsafeCoerce $ valueToJSONImpl <$> a
 valueToJSONImpl (JString s) = unsafeCoerce s
 valueToJSONImpl (JNumber n) = unsafeCoerce n
 valueToJSONImpl (JBool   b) = unsafeCoerce b
 valueToJSONImpl JNull       = jsNull
 
-foreign import jsonStringify
-    "function jsonStringify(json) {\
-    \    return JSON.stringify(json);\
-    \}" :: JSON -> String
+foreign import jsonStringify :: JSON -> String
 
 valueToString :: JValue -> String
 valueToString v = jsonStringify $ valueToJSONImpl v

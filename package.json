@@ -9,5 +9,8 @@
     "gulp-foreach": "^0.1.0",
     "gulp-mocha": "^2.0.0",
     "gulp-purescript": "^0.1.2"
+  },
+  "dependencies": {
+    "gulp-purescript": "^0.5.0"
   }
 }
