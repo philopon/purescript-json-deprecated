@@ -214,13 +214,14 @@ instance valueToJSON :: ToJSON JValue where
 foreign import jsNull :: JSON
 foreign import unsafeCoerce :: forall a b. a -> b
 
-foreign import objToHash :: Fn3 (Tuple String JValue -> String)
+foreign import objToHash :: Fn4 (JValue -> JSON)
+               (Tuple String JValue -> String)
                (Tuple String JValue -> JValue)
                (Array (Tuple String JValue))
                JSON
 
 valueToJSONImpl :: JValue -> JSON
-valueToJSONImpl (JObject o) = runFn3 objToHash fst snd $ fromList $ M.toList o
+valueToJSONImpl (JObject o) = runFn4 objToHash valueToJSONImpl fst snd $ fromList $ M.toList o
 valueToJSONImpl (JArray  a) = unsafeCoerce $ valueToJSONImpl <$> a
 valueToJSONImpl (JString s) = unsafeCoerce s
 valueToJSONImpl (JNumber n) = unsafeCoerce n

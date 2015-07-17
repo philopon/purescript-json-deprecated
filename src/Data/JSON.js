@@ -1,4 +1,4 @@
-/* global exports */
+  /* global exports */
 "use strict";
 
 // module Data.JSON
@@ -61,7 +61,7 @@ exports.unsafeCoerce = function unsafeCoerce(a) {
   return a;
 };
 
-exports.objToHash = function objToHash(fst, snd, obj) {
+exports.objToHash = function objToHash(valueToJSONImpl, fst, snd, obj) {
     var hash = {};
     for(var i = 0; i < obj.length; i++) {
         hash[fst(obj[i])] = valueToJSONImpl(snd(obj[i]));
