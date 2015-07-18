@@ -6,5 +6,5 @@ purescript-json
 
 JSON parsing library like aeson for purescript.
 
-- [Module documentation](docs/Data/JSON.md)
+- [Module documentation](docs.md)
 - [Examples](examples/)
