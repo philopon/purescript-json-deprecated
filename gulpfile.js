@@ -1,14 +1,21 @@
 var gulp       = require('gulp');
 var purescript = require('gulp-purescript');
-var foreach    = require('gulp-foreach');
 var mocha      = require('gulp-mocha');
+var merge      = require('merge-stream');
 
 var path       = require('path');
 
-var bowerPurs = 'bower_components/purescript-*/src/**/*.purs';
-var bowerFfi = 'bower_components/purescript-*/src/**/*.js';
-var sources = [bowerPurs, 'src/**/*.purs'];
-var ffi = [bowerFfi, 'src/**/*.js'];
+var sources =
+    [ 'bower_components/purescript-*/src/**/*.purs'
+    , 'src/**/*.purs'
+    , 'tests/**/*.purs'
+    , 'examples/**/*.purs'
+    ];
+
+var ffi =
+    [ 'bower_components/purescript-*/src/**/*.js'
+    , 'src/**/*.js'
+    ];
 
 gulp.task('psc', function(){
   return purescript.psc({
@@ -17,15 +24,7 @@ gulp.task('psc', function(){
   });
 });
 
-gulp.task('compile', ['psc'], function() {
-  return purescript.pscBundle({
-    src: 'output/**/*.js',
-    output: 'app/examples.js',
-    module: [ 'Data.JSON']
-  });
-});
-
-gulp.task('dotPsci', function(){
+gulp.task('psci', function(){
   return purescript.psci({
     src: sources,
     ffi: ffi
@@ -33,35 +32,29 @@ gulp.task('dotPsci', function(){
 });
 
 gulp.task('pscDocs', function(){
-  return gulp
-    .src('src/**/*.purs')
-    .pipe(foreach(function(stream, file){
-      var p = path.resolve(
-        'docs',
-        path.dirname(file.relative),
-        path.basename(file.relative, ".purs") + ".md")
-      return stream
-        .pipe(purescript.pscDocs())
-        .pipe(gulp.dest(p));
-    }));
+    return purescript.pscDocs({
+      src: sources,
+      docgen: 'Data.JSON',
+    }).pipe(gulp.dest('docs.md'));
 });
 
-gulp.task('buildtest', function(){
-  return purescript.psc({
-    src: sources.concat('tests/Test.purs'),
-    ffi: ffi
-  });
-});
-
-gulp.task('test', ["buildtest"], function(){
-  purescript.pscBundle({
+gulp.task('test', ['psc'], function(){
+  return purescript.pscBundle({
     src: 'output/**/*.js',
-    output: 'tmp/test.js',
-    module: [ 'Test.Main'],
+    module: 'Test.Main',
     main: 'Test.Main'
-  });
-  return gulp.src('tmp/test.js')
-    .pipe(mocha());
+  }).pipe(gulp.dest('tmp/test.js'))
+  .pipe(mocha());
+});
+
+gulp.task('examples', ['psc'], function(){
+  return merge(['Simple', 'Complex'].map(function(example){
+    return purescript.pscBundle({
+      src: 'output/**/*.js',
+      module: 'Examples.' + example,
+      main: 'Examples.' + example
+    }).pipe(gulp.dest('examples/' + example + '.js'));
+  }));
 });
 
 gulp.task('default', ['compile', 'dotPsci', 'test']);
