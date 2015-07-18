@@ -16,6 +16,7 @@ exports.jsonToValueImpl = function jsonToValueImpl(auxes, ctors) {
     var empty  = auxes.empty;
     var Null   = ctors.null;
     var Number = ctors.number;
+    var Int    = ctors.int;
     var Bool   = ctors.bool;
     var String = ctors.string;
     var Array  = ctors.array;
@@ -23,7 +24,7 @@ exports.jsonToValueImpl = function jsonToValueImpl(auxes, ctors) {
     var parse  = function(json) {
         var typ = Object.prototype.toString.call(json).slice(8,-1);
         if (typ === 'Number') {
-            return right(Number(json));
+            return right((json | 0) === json ? Int(json) : Number(json));
         } else if (typ === 'Boolean') {
             return right(Bool(json));
         } else if (typ === 'String') {

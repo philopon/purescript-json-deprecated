@@ -12,6 +12,7 @@ import Prelude
 import qualified Data.Map as M
 import qualified Data.Set as S
 import Data.Either
+import Data.Int
 import Data.Maybe
 import Data.Function
 import Data.Tuple
@@ -27,6 +28,7 @@ data JValue
     | JArray  JArray
     | JString String
     | JNumber Number
+    | JInt    Int
     | JBool   Boolean
     | JNull
 
@@ -35,6 +37,7 @@ instance showValue :: Show JValue where
     show (JArray vs) = "JArray "  ++ show vs
     show (JString s) = "JString " ++ show s
     show (JNumber n) = "JNumber " ++ show n
+    show (JInt    i) = "JInt "    ++ show i
     show (JBool   b) = "JBool "   ++ show b
     show JNull       = "JNull"
 
@@ -43,6 +46,7 @@ instance eqValue :: Eq JValue where
     eq (JArray  a) (JArray  b) = a == b
     eq (JString a) (JString b) = a == b
     eq (JNumber a) (JNumber b) = a == b
+    eq (JInt    a) (JInt    b) = a == b
     eq (JBool   a) (JBool   b) = a == b
     eq JNull       JNull       = true
     eq _          _            = false
@@ -74,7 +78,13 @@ instance boolFromJSON :: FromJSON Boolean where
 
 instance numberFromJSON :: FromJSON Number where
     parseJSON (JNumber n) = return n
+    parseJSON (JInt    i) = return $ toNumber i
     parseJSON i           = fail $ show i ++ " is not Number."
+
+instance intFromJSON :: FromJSON Int where
+    parseJSON (JInt    n) = return n
+    parseJSON (JNumber i) = maybe (fail $ show i ++ " is not Int.") return $ fromNumber i
+    parseJSON i           = fail $ show i ++ " is not Int."
 
 instance unitFromJSON :: FromJSON Unit where
     parseJSON JNull = return unit
@@ -137,6 +147,7 @@ jsonParse s = runFn3 jsonParseImpl Left Right s
 
 type Ctors = { null   :: JValue
              , number :: Number  -> JValue
+             , int    :: Int     -> JValue
              , bool   :: Boolean -> JValue
              , string :: String  -> JValue
              , array  :: JArray  -> JValue
@@ -155,7 +166,7 @@ foreign import jsonToValueImpl :: Fn2 Auxes Ctors (JSON -> Either String JValue)
 jsonToValue :: String -> Either String JValue
 jsonToValue s = runFn3 jsonParseImpl Left (runFn2 jsonToValueImpl auxes ctors) s
   where
-    ctors = { null: JNull, number: JNumber, bool: JBool, string: JString, array: JArray, object: JObject }
+    ctors = { null: JNull, number: JNumber, int: JInt, bool: JBool, string: JString, array: JArray, object: JObject }
     auxes = { left: Left, right: Right, either: either, insert: insert', empty: empty' }
     insert' = M.insert :: String -> JValue -> JObject -> JObject
     empty'  = M.empty :: JObject
@@ -181,6 +192,9 @@ instance boolToJSON :: ToJSON Boolean where
 
 instance numberToJSON :: ToJSON Number where
     toJSON = JNumber
+
+instance intToJSON :: ToJSON Int where
+    toJSON = JInt
 
 instance stringToJSON :: ToJSON String where
     toJSON = JString
@@ -225,6 +239,7 @@ valueToJSONImpl (JObject o) = runFn4 objToHash valueToJSONImpl fst snd $ fromLis
 valueToJSONImpl (JArray  a) = unsafeCoerce $ valueToJSONImpl <$> a
 valueToJSONImpl (JString s) = unsafeCoerce s
 valueToJSONImpl (JNumber n) = unsafeCoerce n
+valueToJSONImpl (JInt    i) = unsafeCoerce i
 valueToJSONImpl (JBool   b) = unsafeCoerce b
 valueToJSONImpl JNull       = jsNull
 
