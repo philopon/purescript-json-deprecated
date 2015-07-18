@@ -26,6 +26,7 @@ data JValue
   | JArray JArray
   | JString String
   | JNumber Number
+  | JInt Int
   | JBool Boolean
   | JNull
 ```
@@ -50,6 +51,7 @@ class FromJSON a where
 instance valueFromJSON :: FromJSON JValue
 instance boolFromJSON :: FromJSON Boolean
 instance numberFromJSON :: FromJSON Number
+instance intFromJSON :: FromJSON Int
 instance unitFromJSON :: FromJSON Unit
 instance stringFromJSON :: FromJSON String
 instance arrayFromJSON :: (FromJSON a) => FromJSON (Array a)
@@ -113,6 +115,7 @@ class ToJSON a where
 ``` purescript
 instance boolToJSON :: ToJSON Boolean
 instance numberToJSON :: ToJSON Number
+instance intToJSON :: ToJSON Int
 instance stringToJSON :: ToJSON String
 instance unitToJSON :: ToJSON Unit
 instance arrayToJSON :: (ToJSON a) => ToJSON (Array a)

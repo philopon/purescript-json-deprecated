@@ -57,4 +57,4 @@ gulp.task('examples', ['psc'], function(){
   }));
 });
 
-gulp.task('default', ['compile', 'dotPsci', 'test']);
+gulp.task('default', ['psc', 'psci', 'pscDocs', 'test', 'examples']);
